@@ -1,0 +1,89 @@
+package com.nikitakozlov.weaverlite
+
+import com.android.build.gradle.AppPlugin
+import com.android.build.gradle.LibraryPlugin
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.ProjectConfigurationException
+import org.gradle.api.tasks.compile.JavaCompile
+import org.aspectj.bridge.IMessage
+import org.aspectj.bridge.MessageHandler
+import org.aspectj.tools.ajc.Main
+
+class WeaverLitePlugin implements Plugin<Project> {
+
+    @Override
+    public void apply(Project project) {
+
+        final def variants
+        if (project.plugins.withType(AppPlugin)) {
+            variants = project.android.applicationVariants
+        } else if (project.plugins.withType(LibraryPlugin)) {
+            variants = project.anoird.libraryVariants
+        } else {
+            throw new ProjectConfigurationException("Either 'com.android.application' or 'com.android.library' " +
+                    "plugin is required.", null)
+        }
+
+        project.extensions.create('weaverLite', WeaverLitePluginExtension)
+        final def logger = project.logger
+        final def ext = project.weaverLite
+
+        if (ext.enabledForRelease) {
+            project.dependencies {
+                compile "org.aspectj:aspectjrt:1.8.6"
+            }
+        } else if (ext.enabledForDebug) {
+            project.dependencies {
+                debugCompile "org.aspectj:aspectjrt:1.8.6"
+            }
+        }
+
+        variants.all { variant ->
+            if ((variant.buildType.isDebuggable() && !ext.enabledForDebug) ||
+                    (!variant.buildType.isDebuggable() && !ext.enabledForRelease)) {
+                logger.debug("AspectJ weaving is disabled for build type '${variant.buildType.name}'.")
+                return
+            }
+            JavaCompile javaCompile = variant.javaCompile
+            final def inPath = javaCompile.destinationDir.toString()
+            final def destinationDir = inPath
+            final def aspectPath = javaCompile.classpath.asPath
+            final def classPath = aspectPath
+            final def bootClassPath = project.android.bootClasspath.join(File.pathSeparator)
+
+            javaCompile.doLast {
+                String[] args = ["-showWeaveInfo", "-1.5",
+                                 "-inpath", inPath,
+                                 "-aspectpath", aspectPath,
+                                 "-d", destinationDir,
+                                 "-classpath", classPath,
+                                 "-bootclasspath", bootClassPath]
+                logger.debug "AspectJ compiler/weaver args: " + Arrays.toString(args)
+
+                Main main = new Main()
+                main.run(args, new MessageHandler(true))
+                for (IMessage message : main.getMessageHandler().getMessages(null, true)) {
+                    switch (message.getKind()) {
+                        case IMessage.ABORT:
+                        case IMessage.ERROR:
+                        case IMessage.FAIL:
+                            logger.error message.message, message.thrown
+                            break
+                        case IMessage.WARNING:
+                            logger.warn message.message, message.thrown
+                            break
+                        case IMessage.INFO:
+                            logger.info message.message, message.thrown
+                            break
+                        case IMessage.DEBUG:
+                            logger.debug message.message, message.thrown
+                            break
+                    }
+                }
+                main.quit()
+            }
+
+        }
+    }
+}

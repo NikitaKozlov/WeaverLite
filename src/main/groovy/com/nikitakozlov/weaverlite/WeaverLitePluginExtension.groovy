@@ -1,17 +1,8 @@
-package com.nikitakozlov.weaver
+package com.nikitakozlov.weaverlite
 
 class WeaverLitePluginExtension {
-    def aspectjVersion = '1.8.6'
     def enabledForDebug = true
     def enabledForRelease = false
-
-    def getAspectjVersion() {
-        return aspectjVersion
-    }
-
-    void setAspectjVersion(aspectjVersion) {
-        this.aspectjVersion = aspectjVersion
-    }
 
     def getEnabledForDebug() {
         return enabledForDebug

@@ -2,6 +2,7 @@ package com.nikitakozlov.weaverlite
 
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
+import org.aspectj.bridge.IMessageHolder
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.ProjectConfigurationException
@@ -30,13 +31,15 @@ class WeaverLitePlugin implements Plugin<Project> {
 
         final def logger = project.logger
 
+        final aspectJVersion = "1.8.6"
+
         if (ext.enabledForRelease) {
             project.dependencies {
-                compile "org.aspectj:aspectjrt:1.8.6"
+                compile "org.aspectj:aspectjrt:${aspectJVersion}"
             }
         } else if (ext.enabledForDebug) {
             project.dependencies {
-                debugCompile "org.aspectj:aspectjrt:1.8.6"
+                debugCompile "org.aspectj:aspectjrt:${aspectJVersion}"
             }
         }
 
@@ -49,7 +52,6 @@ class WeaverLitePlugin implements Plugin<Project> {
 
             JavaCompile javaCompile = variant.javaCompile
             javaCompile.doLast {
-
 
                 final def inPath = javaCompile.destinationDir.toString()
                 final def destinationDir = inPath
@@ -66,26 +68,29 @@ class WeaverLitePlugin implements Plugin<Project> {
 
                 logger.debug "AspectJ compiler/weaver args: " + Arrays.toString(args)
 
-                MessageHandler handler = new MessageHandler(true);
-                new Main().run(args, handler);
-                for (IMessage message : handler.getMessages(null, true)) {
-                    switch (message.getKind()) {
-                        case IMessage.ABORT:
-                        case IMessage.ERROR:
-                        case IMessage.FAIL:
-                            logger.error message.message, message.thrown
-                            break;
-                        case IMessage.WARNING:
-                            logger.warn message.message, message.thrown
-                            break;
-                        case IMessage.INFO:
-                            logger.info message.message, message.thrown
-                            break;
-                        case IMessage.DEBUG:
-                            logger.debug message.message, message.thrown
-                            break;
-                    }
-                }
+                Main main = new Main()
+                main.runMain(args,  false)
+//                IMessageHolder messageHolder = new MessageHandler(true);
+//                main.run(args, messageHolder)
+//                for (IMessage message : messageHolder.getMessages(null, true)) {
+//                    switch (message.getKind()) {
+//                        case IMessage.ABORT:
+//                        case IMessage.ERROR:
+//                        case IMessage.FAIL:
+//                            logger.error message.message, message.thrown
+//                            break;
+//                        case IMessage.WARNING:
+//                            logger.warn message.message, message.thrown
+//                            break;
+//                        case IMessage.INFO:
+//                            logger.info message.message, message.thrown
+//                            break;
+//                        case IMessage.DEBUG:
+//                            logger.debug message.message, message.thrown
+//                            break;
+//                    }
+//                }
+//                main.quit()
             }
         }
 

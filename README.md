@@ -31,13 +31,13 @@ weaverLite {
 
 ## How to start using AspectJ.
 
-1. Add dependency on AspectJ 
-```groovy
-dependencies {
-    compile 'org.aspectj:aspectjrt:1.8.6'
-}
-```
-2. Apply WeaverLite
+1. Add dependency on AspectJ.
+    ```groovy
+    dependencies {
+        compile 'org.aspectj:aspectjrt:1.8.6'
+    }
+    ```
+2. Apply WeaverLite.
 3. Add `@AspectJ` annotation to your aspect class.
 4. Define pointcut.
 5. Enjoy

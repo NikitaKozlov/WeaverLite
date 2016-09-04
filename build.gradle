@@ -1,5 +1,12 @@
 group 'com.nikitakozlov'
-version '0.0.3'
+version '0.0.5'
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+}
 
 apply plugin: 'groovy'
 
@@ -8,7 +15,6 @@ repositories {
 }
 
 dependencies {
-
     compile gradleApi()
     compile localGroovy()
     compile 'org.codehaus.groovy:groovy-all:2.4.4'
@@ -17,12 +23,28 @@ dependencies {
     compile 'com.android.tools.build:gradle:2.1.2'
 }
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
-uploadArchives {
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
+publishing {
     repositories {
-        mavenDeployer {
-            repository(url: uri('repo'))
+        maven {
+            // change to point to your repo, e.g. http://my.org/repo
+            url uri('repo')
         }
     }
 }

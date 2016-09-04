@@ -12,7 +12,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.nikitakozlov:weaverlite:0.0.4'
+        classpath 'com.nikitakozlov:weaverlite:1.0.0'
     }
 }
 
